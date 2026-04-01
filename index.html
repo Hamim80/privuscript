@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Script Agent — Privu</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { min-height: 100vh; }
+    body {
+      background: linear-gradient(145deg, #0a1a4a 0%, #0d2a6e 35%, #0a4a6e 65%, #0a7a7a 100%);
+      font-family: 'DM Sans', sans-serif;
+    }
+    input, textarea, select, button { font-family: 'DM Sans', sans-serif; }
+
+    .orb1 { position: fixed; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,255,0.15) 0%, transparent 70%); top: -80px; right: -100px; pointer-events: none; z-index: 0; }
+    .orb2 { position: fixed; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(0,220,200,0.1) 0%, transparent 70%); bottom: 60px; left: -80px; pointer-events: none; z-index: 0; }
+
+    .sa-wrap { max-width: 620px; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; position: relative; z-index: 2; }
+
+    .glass-card {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 20px;
+      padding: 1.6rem;
+    }
+
+    .glass-input {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      padding: 11px 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .glass-input::placeholder { color: rgba(255,255,255,0.32); }
+    .glass-input:focus { outline: none; border-color: rgba(0,200,180,0.55); box-shadow: 0 0 0 3px rgba(0,200,180,0.1); }
+
+    .glass-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      padding: 11px 14px;
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.7;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .glass-textarea::placeholder { color: rgba(255,255,255,0.32); }
+    .glass-textarea:focus { outline: none; border-color: rgba(0,200,180,0.55); box-shadow: 0 0 0 3px rgba(0,200,180,0.1); }
+
+    .lbl {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.42);
+      margin-bottom: 8px;
+    }
+    .opt-badge {
+      font-size: 11px;
+      color: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .row-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+    .dur-pill {
+      cursor: pointer;
+      padding: 7px 16px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.55);
+      user-select: none;
+    }
+    .dur-pill:hover { border-color: rgba(0,200,180,0.4); color: rgba(255,255,255,0.85); }
+    .dur-pill.active { background: rgba(0,200,180,0.16); border-color: rgba(0,200,180,0.55); color: #00e8d0; }
+
+    .gen-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 13px 30px;
+      background: linear-gradient(135deg, #00c8b0, #00a896);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
+      letter-spacing: 0.01em;
+    }
+    .gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0,200,180,0.38); }
+    .gen-btn:active:not(:disabled) { transform: scale(0.98); }
+    .gen-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .copy-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.65);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .copy-btn.ok { color: #00e8d0; border-color: rgba(0,232,208,0.4); }
+
+    .divider { height: 0.5px; background: rgba(255,255,255,0.1); margin: 1rem 0; }
+    .section-gap { display: flex; flex-direction: column; gap: 1.3rem; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.25); border-top-color: #fff; border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0; display: inline-block; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .anim-in { animation: fadeUp 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+    .script-pre {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+      color: rgba(255,255,255,0.88);
+    }
+    .script-footer { font-size: 12px; color: rgba(255,255,255,0.22); text-align: right; margin-top: 1rem; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="orb1"></div>
+  <div class="orb2"></div>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const SYSTEM_PROMPT = `You are a script writer for a short-form video creator named Privu. He is a 19-year-old Bangladeshi youth creator making reels and short videos about agriculture, environment, green technology, and climate — targeting a young international audience.
+
+His style rules (NON-NEGOTIABLE):
+- Conversational, like explaining to a friend face-to-face. Never academic, never stiff.
+- Use day-to-day life analogies to explain complex things. Real, relatable examples.
+- Light sarcasm and humor — not forced jokes, just a natural wit woven in.
+- Hook in the FIRST line. Must make someone stop scrolling.
+- No jargon without immediate explanation.
+- Short punchy sentences. No long paragraphs.
+- End with something that makes the viewer think or feel something — not a generic "like and subscribe."
+- Voice is young, curious, slightly irreverent. Not a professor. Not an NGO brochure.
+- English only.
+
+Script format:
+- Start with [HOOK] — the first 3-5 seconds, make it impossible to scroll past
+- Then [BODY] — the explanation broken into short beats
+- End with [OUTRO] — a thought, a challenge, a provocation. Not a CTA.
+- Add (pause), (cut), (show footage of X) as production notes in brackets where relevant
+- Estimate the read-aloud duration at the end
+
+Write ONLY the script. No preamble, no explanation. Just the script.`;
+
+    const DURATIONS = [
+      { value: "30", label: "30s" },
+      { value: "60", label: "60s" },
+      { value: "90", label: "90s" },
+      { value: "120", label: "2 min" },
+      { value: "180", label: "3 min" },
+    ];
+
+    function LeafIcon() {
+      return (
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M3 18C3 18 6.5 10.5 12 8C17.5 5.5 19 3 19 3C19 3 17 9.5 11 12.5C8 14 3 18 3 18Z" fill="#00e8d0" opacity="0.85"/>
+          <path d="M3 18C6 14 8.5 12 11 12.5" stroke="#00c8b0" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+      );
+    }
+
+    function App() {
+      const [topic, setTopic] = React.useState("");
+      const [research, setResearch] = React.useState("");
+      const [duration, setDuration] = React.useState("60");
+      const [extra, setExtra] = React.useState("");
+      const [script, setScript] = React.useState("");
+      const [loading, setLoading] = React.useState(false);
+      const [error, setError] = React.useState("");
+      const [copied, setCopied] = React.useState(false);
+      const scriptRef = React.useRef(null);
+
+      React.useEffect(() => {
+        if (script && scriptRef.current) {
+          setTimeout(() => scriptRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+        }
+      }, [script]);
+
+      const generate = async () => {
+        if (!topic.trim()) { setError("Topic is required."); return; }
+        setError(""); setScript(""); setLoading(true);
+        const userPrompt = `Topic: ${topic}\n\n${research.trim() ? `Research / Notes:\n${research}\n\n` : ""}Duration target: ~${duration} seconds\n\n${extra.trim() ? `Extra instructions: ${extra}` : ""}\n\nWrite the script now.`;
+        try {
+          const res = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 1000,
+              system: SYSTEM_PROMPT,
+              messages: [{ role: "user", content: userPrompt }],
+            }),
+          });
+          const data = await res.json();
+          const text = data.content?.map(b => b.text || "").join("") || "";
+          if (!text) throw new Error("Empty");
+          setScript(text);
+        } catch { setError("Something went wrong. Try again."); }
+        finally { setLoading(false); }
+      };
+
+      const copy = () => {
+        navigator.clipboard.writeText(script);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+
+      return (
+        <div className="sa-wrap">
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: "2.25rem" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 15, background: "rgba(0,200,180,0.13)", border: "1px solid rgba(0,200,180,0.22)", margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <LeafIcon />
+            </div>
+            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 30, fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", marginBottom: 6 }}>Script Agent</h1>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Built for Privu's voice. Nobody else's.</p>
+          </div>
+
+          {/* Card */}
+          <div className="glass-card section-gap">
+
+            {/* Topic */}
+            <div>
+              <div className="row-label">
+                <span className="lbl" style={{ marginBottom: 0 }}>Topic <span style={{ color: "#ff6b6b" }}>*</span></span>
+              </div>
+              <input
+                className="glass-input"
+                type="text"
+                value={topic}
+                onChange={e => { setTopic(e.target.value); setError(""); }}
+                placeholder="e.g. How natural gas is formed underground"
+              />
+              {error && <p style={{ fontSize: 12, color: "#ff6b6b", marginTop: 6 }}>{error}</p>}
+            </div>
+
+            {/* Research */}
+            <div>
+              <div className="row-label">
+                <span className="lbl" style={{ marginBottom: 0 }}>Research & notes</span>
+                <span className="opt-badge">optional</span>
+              </div>
+              <textarea
+                className="glass-textarea"
+                value={research}
+                onChange={e => setResearch(e.target.value)}
+                placeholder="Paste facts, stats, your own notes. More input = better script."
+              />
+            </div>
+
+            {/* Duration */}
+            <div>
+              <span className="lbl">Duration</span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {DURATIONS.map(d => (
+                  <div key={d.value} className={`dur-pill${duration === d.value ? " active" : ""}`} onClick={() => setDuration(d.value)}>
+                    {d.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Extra */}
+            <div>
+              <div className="row-label">
+                <span className="lbl" style={{ marginBottom: 0 }}>Extra instructions</span>
+                <span className="opt-badge">optional</span>
+              </div>
+              <input
+                className="glass-input"
+                type="text"
+                value={extra}
+                onChange={e => setExtra(e.target.value)}
+                placeholder="e.g. end with a Bangladesh angle, more sarcastic"
+              />
+            </div>
+
+            {/* Button */}
+            <div style={{ paddingTop: 4 }}>
+              <button className="gen-btn" onClick={generate} disabled={loading}>
+                {loading && <span className="spinner" />}
+                {loading ? "Writing your script..." : "Generate script"}
+              </button>
+            </div>
+          </div>
+
+          {/* Output */}
+          {script && (
+            <div ref={scriptRef} className="anim-in" style={{ marginTop: "1.5rem" }}>
+              <div className="glass-card">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                  <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 700, color: "#fff" }}>Your script</span>
+                  <button className={`copy-btn${copied ? " ok" : ""}`} onClick={copy}>
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <div className="divider" />
+                <pre className="script-pre">{script}</pre>
+                <p className="script-footer">Review it. Make it yours. Then record.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
